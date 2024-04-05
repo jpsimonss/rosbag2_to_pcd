@@ -40,10 +40,8 @@ Rosbag2ToPcdNode::Rosbag2ToPcdNode(const rclcpp::NodeOptions & node_options)
   RCLCPP_INFO(get_logger(), "Starting rosbag2_to_pcd node...");
   const std::string path_bag = this->declare_parameter<std::string>("path_bag");
   const std::string topic_cloud = this->declare_parameter<std::string>("topic_cloud");
+  const std::string output_dir = this->declare_parameter<std::string>("output_dir");
 
-  const std::string path_pcds = path_bag + "_pcds/";
-
-  std::filesystem::create_directory(path_pcds);
 
   rosbag2_cpp::Reader reader;
   try {
@@ -81,15 +79,25 @@ Rosbag2ToPcdNode::Rosbag2ToPcdNode(const rclcpp::NodeOptions & node_options)
       pcl::PointCloud<pcl::PointXYZI>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZI>);
       pcl::fromROSMsg(*msg_cloud, *cloud);
 
-      std::stringstream ss_timestamp;
-      ss_timestamp << msg_cloud->header.stamp.sec << "-" << msg_cloud->header.stamp.nanosec;
-      std::string timestamp = ss_timestamp.str();
+      std::stringstream ss_nano_timestamp;
+      std::stringstream ss_sec_timestamp;
+
+      ss_nano_timestamp << msg_cloud->header.stamp.nanosec;
+      ss_sec_timestamp << msg_cloud->header.stamp.sec;
+      std::string nano_timestamp = ss_nano_timestamp.str();
+      std::string sec_timestamp = ss_sec_timestamp.str();
+
+      if (nano_timestamp.length() < 9) {
+        nano_timestamp = "00" + nano_timestamp;
+      }
+      std::string timestamp = sec_timestamp + '-' + nano_timestamp;
+      
 
       RCLCPP_INFO_STREAM(
         get_logger(),
         "timestamp: " << timestamp << " #" << ctr_msg_cloud << " of " << message_count);
 
-      std::string filename = path_pcds + timestamp + ".pcd";
+      std::string filename = output_dir + "/" + timestamp + ".pcd";
 
       pcl::io::savePCDFileASCII(filename, *cloud);
       ctr_msg_cloud++;
