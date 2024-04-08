@@ -90,7 +90,7 @@ Rosbag2ToPcdNode::Rosbag2ToPcdNode(const rclcpp::NodeOptions & node_options)
       if (nano_timestamp.length() < 9) {
         nano_timestamp = "00" + nano_timestamp;
       }
-      std::string timestamp = sec_timestamp + '-' + nano_timestamp;
+      std::string timestamp = sec_timestamp + '_' + nano_timestamp;
       
 
       RCLCPP_INFO_STREAM(
